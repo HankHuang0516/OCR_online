@@ -1,0 +1,7 @@
+{
+  "name": "繁體中文 OCR 助手",
+  "description": "一個專業且美觀的繁體中文光學字元辨識 (OCR) 應用程式，利用 Gemini AI 技術精準辨識圖片中的文字。",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
