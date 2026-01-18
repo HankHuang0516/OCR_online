@@ -3,8 +3,8 @@ import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import Tesseract from 'tesseract.js';
 
 const getAI = () => {
-  const apiKey = process.env.API_KEY || '';
-  if (!apiKey) throw new Error("API Key 未設定");
+  const apiKey = localStorage.getItem('gemini_api_key') || process.env.API_KEY || '';
+  if (!apiKey) throw new Error("API Key 未設定，請在設定中輸入您的 Gemini API Key");
   return new GoogleGenAI({ apiKey });
 };
 
@@ -95,7 +95,7 @@ const preprocessImage = (base64Image: string): Promise<string> => {
         const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
         // 增強對比：低於 128 的變更黑，高於 128 的變更白
         const color = avg < 120 ? Math.max(0, avg - 40) : Math.min(255, avg + 40);
-        
+
         data[i] = color;
         data[i + 1] = color;
         data[i + 2] = color;
@@ -103,7 +103,7 @@ const preprocessImage = (base64Image: string): Promise<string> => {
 
       ctx.putImageData(imageData, 0, 0);
       const finalDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      
+
       // 確保不是無效的 data URL
       if (finalDataUrl === "data:," || finalDataUrl.length < 100) {
         resolve(base64Image);
@@ -120,11 +120,11 @@ const preprocessImage = (base64Image: string): Promise<string> => {
 export const performGeminiOCR = async (base64Image: string): Promise<string> => {
   try {
     const ai = getAI();
-    
+
     // 使用 Regex 安全地提取 MIME 類型與 Base64 數據
     const base64Regex = /^data:(image\/\w+);base64,(.+)$/;
     const matches = base64Image.match(base64Regex);
-    
+
     let mimeType = 'image/jpeg';
     let imageData = '';
 
@@ -171,7 +171,7 @@ export const performGeminiOCR = async (base64Image: string): Promise<string> => 
 export const performLocalOCR = async (base64Image: string, onProgress?: (p: number) => void): Promise<string> => {
   try {
     const processedImage = await preprocessImage(base64Image);
-    
+
     const { data: { text } } = await Tesseract.recognize(
       processedImage,
       'chi_tra+eng',
@@ -183,7 +183,7 @@ export const performLocalOCR = async (base64Image: string, onProgress?: (p: numb
         }
       }
     );
-    
+
     // 執行強化清理邏輯
     const cleanedText = cleanOcrText(text);
     return cleanedText.length > 0 ? cleanedText : "無文字";
